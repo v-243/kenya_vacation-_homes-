@@ -1,0 +1,3 @@
+- [x] Update VideoCard.css: Change .video-card-container height from 25% to 30%
+- [x] Update VideoCard.css: Change .short-video-card width from 60% to 90%
+- [x] Update VideoCard.jsx: Change comment to reflect 30% height and 90% width

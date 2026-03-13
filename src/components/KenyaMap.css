@@ -1,0 +1,44 @@
+/* KenyaMap Component Styles */
+
+.map-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f9fafb; /* Light gray background */
+}
+
+.leaflet-container {
+  height: 400px;
+  width: 90%;
+  max-width: 800px;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 0;
+}
+
+/* Custom marker styles if needed */
+.leaflet-popup-content-wrapper {
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.leaflet-popup-content {
+  margin: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .leaflet-container {
+    width: 80%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .leaflet-container {
+    width: 70%;
+  }
+}
