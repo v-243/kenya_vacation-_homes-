@@ -771,6 +771,101 @@ router.delete('/videos/:filename', adminAuth, async (req, res) => {
   } catch (err) {
     console.error('Error deleting video:', err);
     res.status(500).json({ error: 'Failed to delete video' });
+});
+
+// ===== ANALYTICS ENDPOINTS =====
+
+// POST /api/newsletter/subscribe - Subscribe to newsletter
+router.post('/newsletter/subscribe', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Please provide a valid email address' });
+  }
+
+  try {
+    // Check if email already exists
+    const [existing] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ? AND is_active = TRUE', [email]);
+
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'Email already subscribed' });
+    }
+
+    // Add new subscriber
+    await db.query('INSERT INTO newsletter_subscribers (email) VALUES (?)', [email]);
+
+    res.status(201).json({ message: 'Successfully subscribed to newsletter' });
+  } catch (err) {
+    console.error('Error subscribing to newsletter:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST /api/houses/:id/like - Like a house
+router.post('/houses/:id/like', async (req, res) => {
+  const { id } = req.params;
+  const userIp = req.ip || req.connection.remoteAddress;
+  const userAgent = req.get('User-Agent');
+
+  try {
+    // Check if house exists
+    const [houses] = await db.query('SELECT id FROM houses WHERE id = ?', [id]);
+    if (houses.length === 0) {
+      return res.status(404).json({ error: 'House not found' });
+    }
+
+    // Check if already liked by this IP
+    const [existing] = await db.query('SELECT id FROM house_likes WHERE house_id = ? AND user_ip = ?', [id, userIp]);
+
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'Already liked by this user' });
+    }
+
+    // Add like
+    await db.query('INSERT INTO house_likes (house_id, user_ip, user_agent) VALUES (?, ?, ?)', [id, userIp, userAgent]);
+
+    res.status(201).json({ message: 'House liked successfully' });
+  } catch (err) {
+    console.error('Error liking house:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET /api/admin/stats - Get analytics stats (admin only)
+router.get('/admin/stats', adminAuth, async (req, res) => {
+  try {
+    // Get newsletter subscriber count
+    const [subscriberResult] = await db.query('SELECT COUNT(*) as count FROM newsletter_subscribers WHERE is_active = TRUE');
+    const subscriberCount = subscriberResult[0].count;
+
+    // Get total likes count
+    const [likesResult] = await db.query('SELECT COUNT(*) as count FROM house_likes');
+    const totalLikes = likesResult[0].count;
+
+    // Get top 3 houses by likes
+    const [topHouses] = await db.query(`
+      SELECT h.id, h.name, h.location, COUNT(l.id) as like_count
+      FROM houses h
+      LEFT JOIN house_likes l ON h.id = l.house_id
+      GROUP BY h.id, h.name, h.location
+      ORDER BY like_count DESC
+      LIMIT 3
+    `);
+
+    res.json({
+      newsletterSubscribers: subscriberCount,
+      totalLikes: totalLikes,
+      topHouses: topHouses
+    });
+  } catch (err) {
+    console.error('Error fetching stats:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

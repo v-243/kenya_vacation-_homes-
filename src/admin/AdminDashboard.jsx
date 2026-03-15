@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AdminBookings from './Bookings';
 import AddHousePage from './AddHousePage';
 import MyHouses from './MyHouses';
-import AdvertisementVideos from './AdvertisementVideos';
+import AdminStats from './AdminStats';
 
 const AdminDashboard = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('bookings');
@@ -94,14 +94,7 @@ const AdminDashboard = ({ onLogout }) => {
             onBack={() => setActiveTab('bookings')}
           />
         )}
-        {activeTab === 'stats' && (
-          <div className="p-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Coming Soon</h2>
-              <p className="text-gray-600">Statistics page will be available soon.</p>
-            </div>
-          </div>
-        )}
+        {activeTab === 'stats' && <AdminStats />}
         {activeTab === 'advertisement-videos' && <AdvertisementVideos />}
       </div>
     </div>

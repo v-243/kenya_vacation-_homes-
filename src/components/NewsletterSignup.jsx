@@ -4,12 +4,29 @@ const NewsletterSignup = () => {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send the email to your backend
-    console.log('Subscribing email:', email);
-    setIsSubscribed(true);
-    setEmail('');
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsSubscribed(true);
+        setEmail('');
+      } else {
+        alert(data.error || 'Failed to subscribe. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      alert('Failed to subscribe. Please try again.');
+    }
   };
 
   return (

@@ -5,12 +5,33 @@ const WishlistButton = ({ house, className = "" }) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const isWishlisted = isInWishlist(house.id);
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     e.stopPropagation(); // Prevent triggering parent onClick
     if (isWishlisted) {
       removeFromWishlist(house.id);
     } else {
-      addToWishlist(house);
+      try {
+        // Call the API to record the like
+        const response = await fetch(`/api/houses/${house.id}/like`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          addToWishlist(house);
+        } else {
+          const data = await response.json();
+          console.error('Failed to like house:', data.error);
+          // Still add to local wishlist even if API fails
+          addToWishlist(house);
+        }
+      } catch (error) {
+        console.error('Error liking house:', error);
+        // Still add to local wishlist even if API fails
+        addToWishlist(house);
+      }
     }
   };
 
