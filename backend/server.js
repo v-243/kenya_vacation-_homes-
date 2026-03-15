@@ -14,10 +14,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the public directory
-app.use(express.static('../public'));
-app.use(express.static('public')); // Serve from public folder in backend
-
 // Note: /api/houses and /api routes are now consolidated in apiRoutes
 // houseRoutes is deprecated and should not be used
 app.use('/api', apiRoutes);
