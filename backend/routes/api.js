@@ -18,19 +18,10 @@ router.get('/houses', async (req, res) => {
     let query = 'SELECT * FROM houses';
     const params = [];
     if (search) {
-      query += ' WHERE location LIKE ? OR name LIKE ?';
+      query += ' WHERE location ILIKE $1 OR name ILIKE $2';
       params.push(`%${search}%`, `%${search}%`);
     }
-    query += ' LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
-    
-    const [houses] = await db.query(query, params);
-    res.json(houses);
-  } catch (err) {
-    console.error('Error fetching houses:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+    query += ' LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
 
 // POST /api/houses - Create a new house (admin only)
 router.post('/houses', adminAuth, (req, res, next) => {
@@ -66,8 +57,8 @@ router.post('/houses', adminAuth, (req, res, next) => {
 
     // Insert house into database
     const insertQuery = `INSERT INTO houses (name, location, price, beds, baths, description, imageUrl)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    
+      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`;
+
     const [result] = await db.query(insertQuery, [
       name.trim(),
       location.trim(),
@@ -79,9 +70,7 @@ router.post('/houses', adminAuth, (req, res, next) => {
     ]);
 
     // Fetch the newly created house
-    const [houses] = await db.query('SELECT * FROM houses WHERE id = ?', [result.insertId]);
-    const newHouse = houses[0];
-
+    const [houses] = await db.query('SELECT * FROM houses WHERE id = $1', [result[0].id]);
     res.status(201).json({
       message: 'House added successfully',
       house: newHouse
@@ -117,7 +106,7 @@ router.post('/bookings', async (req, res) => {
 
   try {
     // Check if the house is already booked and not checked out
-    const checkQuery = 'SELECT id FROM bookings WHERE house_id = ? AND checked_out = 0';
+    const checkQuery = 'SELECT id FROM bookings WHERE house_id = $1 AND checked_out = 0';
     const [existingBookings] = await db.query(checkQuery, [house_id]);
 
     if (existingBookings.length > 0) {
@@ -125,7 +114,7 @@ router.post('/bookings', async (req, res) => {
     }
 
     // Fetch house details
-    const [houses] = await db.query('SELECT id, name, location FROM houses WHERE id = ?', [house_id]);
+    const [houses] = await db.query('SELECT id, name, location FROM houses WHERE id = $1', [house_id]);
     const house = houses && houses[0] ? houses[0] : { id: house_id, name: 'Unknown', location: '' };
 
     if (payment_method === 'M-Pesa') {
@@ -174,13 +163,13 @@ router.post('/bookings', async (req, res) => {
       // Create pending booking record
       const insertQuery = `INSERT INTO bookings
         (house_id, customer_name, customer_id_number, customer_phone, total_cost, email, payment_method, nights, checked_out, payment_status, mpesa_checkout_request_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'pending', ?)`;
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, 'pending', $9) RETURNING id`;
       const [result] = await db.query(insertQuery, [
         house_id, customer_name, customer_id_number, customer_phone, total_cost, email || null, payment_method, nights || 1, stkResult.checkoutRequestId
       ]);
 
       const receipt = {
-        bookingId: result.insertId,
+        bookingId: result[0].id,
         houseId: house_id,
         houseName: house.name,
         apartmentName: house.name,
@@ -207,7 +196,7 @@ router.post('/bookings', async (req, res) => {
             const updateQuery = `
               UPDATE bookings
               SET payment_status = 'completed'
-              WHERE mpesa_checkout_request_id = ? AND payment_status = 'pending'
+              WHERE mpesa_checkout_request_id = $1 AND payment_status = 'pending'
             `;
             await db.query(updateQuery, [stkResult.checkoutRequestId]);
             console.log(`Payment completed via status check for CheckoutRequestID: ${stkResult.checkoutRequestId}`);
@@ -216,7 +205,7 @@ router.post('/bookings', async (req, res) => {
             const updateQuery = `
               UPDATE bookings
               SET payment_status = 'failed'
-              WHERE mpesa_checkout_request_id = ? AND payment_status = 'pending'
+              WHERE mpesa_checkout_request_id = $1 AND payment_status = 'pending'
             `;
             await db.query(updateQuery, [stkResult.checkoutRequestId]);
             console.log(`Payment failed via status check for CheckoutRequestID: ${stkResult.checkoutRequestId}`);
@@ -239,11 +228,11 @@ router.post('/bookings', async (req, res) => {
       return res.status(400).json({ error: 'PayPal payment not yet implemented.' });
     } else {
       // For other payment methods (like Card), assume payment is completed
-      const insertQuery = 'INSERT INTO bookings (house_id, customer_name, customer_id_number, customer_phone, total_cost, email, payment_method, nights, checked_out, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)';
+      const insertQuery = 'INSERT INTO bookings (house_id, customer_name, customer_id_number, customer_phone, total_cost, email, payment_method, nights, checked_out, payment_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9) RETURNING id';
       const [result] = await db.query(insertQuery, [house_id, customer_name, customer_id_number, customer_phone, total_cost, email || null, payment_method, nights || 1, 'completed']);
 
       const receipt = {
-        bookingId: result.insertId,
+        bookingId: result[0].id,
         houseId: house_id,
         houseName: house.name,
         apartmentName: house.name,
@@ -299,7 +288,7 @@ router.put('/bookings/:id/checkout', adminAuth, async (req, res) => {
 
   try {
     // First, verify the booking exists and get its details
-    const [bookings] = await db.query('SELECT * FROM bookings WHERE id = ?', [id]);
+    const [bookings] = await db.query('SELECT * FROM bookings WHERE id = $1', [id]);
     if (!bookings || bookings.length === 0) {
       return res.status(404).json({ error: 'Booking not found' });
     }
@@ -307,7 +296,7 @@ router.put('/bookings/:id/checkout', adminAuth, async (req, res) => {
     const booking = bookings[0];
     
     // Update the booking to mark as checked out
-    const updateQuery = 'UPDATE bookings SET checked_out = 1 WHERE id = ?';
+    const updateQuery = 'UPDATE bookings SET checked_out = 1 WHERE id = $1';
     const [result] = await db.query(updateQuery, [id]);
 
     if (result.affectedRows === 0) {
@@ -332,7 +321,7 @@ router.get('/bookings/:id/status', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [rows] = await db.query('SELECT * FROM bookings WHERE id = ?', [id]);
+    const [rows] = await db.query('SELECT * FROM bookings WHERE id = $1', [id]);
 
     if (!rows || rows.length === 0) {
       return res.status(404).json({ error: 'Booking not found' });
@@ -342,7 +331,7 @@ router.get('/bookings/:id/status', async (req, res) => {
 
     // If payment is completed, include the full receipt
     if (booking.payment_status === 'completed') {
-      const [houses] = await db.query('SELECT id, name, location FROM houses WHERE id = ?', [booking.house_id]);
+      const [houses] = await db.query('SELECT id, name, location FROM houses WHERE id = $1', [booking.house_id]);
       const house = houses && houses[0] ? houses[0] : { id: booking.house_id, name: 'Unknown', location: '' };
 
       const receipt = {
@@ -397,12 +386,12 @@ router.post('/mpesa/callback', async (req, res) => {
       const phoneNumber = metadata.find(item => item.Name === 'PhoneNumber')?.Value;
 
       // Update booking status to completed
-      await db.query('UPDATE bookings SET payment_status = ?, mpesa_receipt_number = ? WHERE mpesa_checkout_request_id = ?', ['completed', receiptNumber, CheckoutRequestID]);
+      await db.query('UPDATE bookings SET payment_status = $1, mpesa_receipt_number = $2 WHERE mpesa_checkout_request_id = $3', ['completed', receiptNumber, CheckoutRequestID]);
 
       res.status(200).json({ success: true });
     } else {
       // Payment failed
-      await db.query('UPDATE bookings SET payment_status = ? WHERE mpesa_checkout_request_id = ?', ['failed', CheckoutRequestID]);
+      await db.query('UPDATE bookings SET payment_status = $1 WHERE mpesa_checkout_request_id = $2', ['failed', CheckoutRequestID]);
       res.status(200).json({ success: false, message: ResultDesc });
     }
   } catch (error) {
@@ -452,7 +441,7 @@ router.post('/admin/register', async (req, res) => {
 
     // Insert new admin
     await db.query(
-      'INSERT INTO admins (full_name, email, id_number, location, password) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO admins (full_name, email, id_number, location, password) VALUES ($1, $2, $3, $4, $5)',
       [fullName, email, id_number, location, hashedPassword]
     );
 
@@ -472,7 +461,7 @@ router.post('/admin/login', async (req, res) => {
   }
 
   try {
-    const [admins] = await db.query('SELECT * FROM admins WHERE email = ?', [email]);
+    const [admins] = await db.query('SELECT * FROM admins WHERE email = $1', [email]);
 
     if (admins.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -519,14 +508,14 @@ router.post('/admin/forgot-password', async (req, res) => {
   }
 
   try {
-    const [admins] = await db.query('SELECT id, email, full_name FROM admins WHERE email = ?', [email]);
-    
+    const [admins] = await db.query('SELECT id, email, full_name FROM admins WHERE email = $1', [email]);
+
     if (admins.length === 0) {
       return res.status(404).json({ error: 'Admin not found' });
     }
 
     const admin = admins[0];
-    
+
     // Check if admin has email
     if (!admin.email) {
       return res.status(400).json({ error: 'No email address on file. Please contact system administrator.' });
@@ -584,7 +573,7 @@ router.post('/admin/reset-password', async (req, res) => {
 
     // Find admin with valid reset token
     const [admins] = await db.query(
-      'SELECT id FROM admins WHERE reset_token_hash = ? AND reset_token_expire > NOW()',
+      'SELECT id FROM admins WHERE reset_token_hash = $1 AND reset_token_expire > NOW()',
       [resetTokenHash]
     );
 
@@ -598,7 +587,7 @@ router.post('/admin/reset-password', async (req, res) => {
 
     // Update password and clear reset token
     await db.query(
-      'UPDATE admins SET password = ?, reset_token_hash = NULL, reset_token_expire = NULL WHERE id = ?',
+      'UPDATE admins SET password = $1, reset_token_hash = NULL, reset_token_expire = NULL WHERE id = $2',
       [hashedPassword, admins[0].id]
     );
 
@@ -750,7 +739,7 @@ router.get('/videos', async (req, res) => {
 router.delete('/videos/:filename', adminAuth, async (req, res) => {
   const { filename } = req.params;
   try {
-    const [videos] = await db.query('SELECT * FROM advertisement_videos WHERE filename = ?', [filename]);
+    const [videos] = await db.query('SELECT * FROM advertisement_videos WHERE filename = $1', [filename]);
     if (!videos || videos.length === 0) {
       return res.status(404).json({ error: 'Video not found' });
     }

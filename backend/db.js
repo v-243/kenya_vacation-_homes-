@@ -1,4 +1,4 @@
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -7,18 +7,23 @@ let pool;
 
 const connectDB = async () => {
   try {
-    pool = mysql.createPool({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || 'root',
-      database: process.env.DB_NAME || 'houseskenya',
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0
+    pool = new Pool({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 5432,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
     });
-    console.log('MySQL pool created');
+
+    // Test the connection
+    await pool.query('SELECT NOW()');
+    console.log('PostgreSQL pool created successfully');
   } catch (err) {
-    console.error('MySQL connection error:', err.message);
+    console.error('PostgreSQL connection error:', err.message);
     process.exit(1);
   }
 };
@@ -33,7 +38,13 @@ const getConnection = () => {
 // Convenience query wrapper so other modules can call db.query(sql, params)
 const query = async (sql, params) => {
   const conn = getConnection();
-  return conn.query(sql, params);
+  try {
+    const result = await conn.query(sql, params);
+    return [result.rows, result];
+  } catch (err) {
+    console.error('Query error:', err);
+    throw err;
+  }
 };
 
 module.exports = { connectDB, getConnection, query };
