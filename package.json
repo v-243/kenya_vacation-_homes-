@@ -1,15 +1,7 @@
 {
-  
-  "homepage": "https://v-243.github.io/kenya_vacation-_homes-",
-  
   "name": "housekenya-app",
-  
   "version": "0.1.0",
-  
   "private": true,
-  
-  "proxy": "http://localhost:5000",
-  
   "dependencies": {
   
     
@@ -48,28 +40,10 @@
   },
   
   "scripts": {
-  
-    
-  "start": "react-scripts start",
-  
-    
-  "build": "react-scripts build && npm run copy-uploads",
-  
-    
-  "copy-uploads": "xcopy /Y /I backend\\public\\uploads build\\uploads",
-  
-    
-  "test": "react-scripts test",
-  
-    
-  "eject": "react-scripts eject",
-  
-    
-  "predeploy": "npm run build",
-  
-    
-  "deploy": "gh-pages -d build"
-  
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   
   "eslintConfig": {
