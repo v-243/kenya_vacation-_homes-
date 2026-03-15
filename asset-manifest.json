@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/kenya_vacation-_homes-/static/css/main.193f3df3.css",
-    "main.js": "/kenya_vacation-_homes-/static/js/main.238e5b92.js",
+    "main.js": "/kenya_vacation-_homes-/static/js/main.7caf6b73.js",
     "index.html": "/kenya_vacation-_homes-/index.html",
     "main.193f3df3.css.map": "/kenya_vacation-_homes-/static/css/main.193f3df3.css.map",
-    "main.238e5b92.js.map": "/kenya_vacation-_homes-/static/js/main.238e5b92.js.map"
+    "main.7caf6b73.js.map": "/kenya_vacation-_homes-/static/js/main.7caf6b73.js.map"
   },
   "entrypoints": [
     "static/css/main.193f3df3.css",
-    "static/js/main.238e5b92.js"
+    "static/js/main.7caf6b73.js"
   ]
 }
