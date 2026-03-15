@@ -4,7 +4,7 @@ async function createNewsletterTable() {
   try {
     await db.query(`
       CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-        id SERIAL PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_active BOOLEAN DEFAULT TRUE
@@ -20,12 +20,12 @@ async function createHouseLikesTable() {
   try {
     await db.query(`
       CREATE TABLE IF NOT EXISTS house_likes (
-        id SERIAL PRIMARY KEY,
-        house_id INTEGER NOT NULL,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        house_id INT NOT NULL,
         user_ip VARCHAR(45),
         user_agent TEXT,
         liked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(house_id, user_ip)
+        UNIQUE KEY unique_house_user (house_id, user_ip)
       )
     `);
     console.log('House likes table created successfully');
