@@ -3,13 +3,8 @@ import './Layout.css'; // Import the CSS file
 
 const Layout = ({ children }) => {
   return (
-   <div className="layout-container">
-      {/* Main Content Divisions */}
-      <main className="content-area">
-        {children}
-      </main>
-
-      {/* Footer Section with Contact Info */}
+    <div>
+      {children}
       <footer className="footer">
         <div className="contact-info">
           <h3>Contact Us</h3>

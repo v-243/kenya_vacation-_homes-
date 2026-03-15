@@ -1,10 +1,8 @@
 import React, { useState, useMemo, StrictMode, useEffect } from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
-import VideoCard from './auth/VideoCard';
 
 import axios from 'axios';
 import Layout from './Display';
-import KenyaMap from './KenyaMap';
 import AdminDashboard from '../admin/AdminDashboard';
 import AdminAuth from '../admin/AdminAuth';
 import BookingDetailsPage from '../pages/BookingDetailsPage';
@@ -39,7 +37,7 @@ const Header = ({ searchQuery, setSearchQuery, onAdminClick }) => {
     <div className="p-4 sm:p-6 bg-white shadow-lg sticky top-0 z-10 border-b border-gray-100">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <img
-                src="/kenya.svg"
+                src={`${process.env.PUBLIC_URL}/kenya.svg`}
                 alt="Kenya House Logo"
                 className="h-12 w-auto cursor-pointer"
                 onClick={() => navigate('/')}
@@ -56,6 +54,12 @@ const Header = ({ searchQuery, setSearchQuery, onAdminClick }) => {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 </div>
                 <div className="flex items-center space-x-4">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="px-6 py-2 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                    >
+                        Home
+                    </button>
                     <button
                         onClick={() => navigate('/wishlist')}
                         className="relative p-2 text-gray-600 hover:text-red-500 transition duration-200"
@@ -113,6 +117,7 @@ const HouseCard = ({ house, onSelect }) => {
                 src={getImageURL(house.imageUrl)}
                 alt={house.name}
                 className="w-full h-32 object-cover"
+                loading="lazy"
                 onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/D1D5DB/1F2937?text=Image+Unavailable"; }}
             />
             <div className="p-4">
@@ -344,9 +349,8 @@ const HouseDetailView = ({ houses, setSelectedHouse, selectedNights, setSelected
 };
 
 const HomePage = ({ houses, searchQuery, handleSelectHouse, filters, onFiltersChange, sortBy, onSortChange, onClearFilters }) => (
-    <>
-      <HeroSection />
-      <Layout>
+    <Layout>
+        <HeroSection />
         <ListingView
             houses={houses}
             onSelect={handleSelectHouse}
@@ -357,46 +361,43 @@ const HomePage = ({ houses, searchQuery, handleSelectHouse, filters, onFiltersCh
             onSortChange={onSortChange}
             onClearFilters={onClearFilters}
         />
-        <VideoCard />
         <Testimonials />
         <NewsletterSignup />
-        <>
-          <header className="header">
-            <h1>KNOW MORE ABOUT US </h1>
-          </header>
-          <div className="text-division division-1">
-            <h2>ABOUT US</h2>
-            <p>
-              We own several rental houses within Nairobi, Mombasa, Thika, and Kisumu. In areas where we don't have our own properties, we work with trusted landlords so
-              you can rent confidently and conveniently.
-            </p>
-          </div>
-          <div className="text-division division-2">
-            <h2>OUR WORKING</h2>
-            <p>
-             Our platform connects tenants and property owners seamlessly, offering secure payments, real-time availability, and 24/7 support. Feel secure to find a place of your choice with us.
-            </p>
-          </div>
-          <div className="text-division division-3">
-            <h2>TERMS AND POLICY</h2>
-            <ul>
-                <li>Make payments to secure the bookings.</li>
-                <li>In case the client does not show up for personal reasons, no refund of payments will be issued.</li>
-                <li>If a client makes a payment but does not get the accommodation due to company issues, the money is fully refundable.</li>
-                <li>If hosted, keep the company's property secure. In case of any loss of items, the person responsible will be held accountable.</li>
-            </ul>
-          </div>
-          <div className="text-division division-4">
-            <h2>OUR VISION</h2>
-            <p>
-              To be the leading and most trusted house and vacation rental booking platform in Kenya,
-              providing seamless, secure, and memorable stays for every traveler.
-            </p>
-          </div>
-        </>
-        <KenyaMap houses={houses} />
-      </Layout>
-    </>
+        <div style={{ padding: '20px' }}>
+            <header className="header">
+                <h1>KNOW MORE ABOUT US </h1>
+            </header>
+            <div className="text-division division-1">
+                <h2>ABOUT US</h2>
+                <p>
+                    We own several rental houses within Nairobi, Mombasa, Thika, and Kisumu. In areas where we don't have our own properties, we work with trusted landlords so
+                    you can rent confidently and conveniently.
+                </p>
+            </div>
+            <div className="text-division division-2">
+                <h2>OUR WORKING</h2>
+                <p>
+                    Our platform connects tenants and property owners seamlessly, offering secure payments, real-time availability, and 24/7 support. Feel secure to find a place of your choice with us.
+                </p>
+            </div>
+            <div className="text-division division-3">
+                <h2>TERMS AND POLICY</h2>
+                <ul>
+                    <li>Make payments to secure the bookings.</li>
+                    <li>In case the client does not show up for personal reasons, no refund of payments will be issued.</li>
+                    <li>If a client makes a payment but does not get the accommodation due to company issues, the money is fully refundable.</li>
+                    <li>If hosted, keep the company's property secure. In case of any loss of items, the person responsible will be held accountable.</li>
+                </ul>
+            </div>
+            <div className="text-division division-4">
+                <h2>OUR VISION</h2>
+                <p>
+                    To be the leading and most trusted house and vacation rental booking platform in Kenya,
+                    providing seamless, secure, and memorable stays for every traveler.
+                </p>
+            </div>
+        </div>
+    </Layout>
 );
 
 const AdminPage = ({ token, setToken }) => {
@@ -436,11 +437,39 @@ const App = () => {
     const location = useLocation();
 
     useEffect(() => {
-        axios.get('/api/houses')
-            .then(response => setHouses(response.data))
-            .catch(error => {
-                console.error('Error fetching houses:', error);
-            });
+        // Temporarily use mock data for demo
+        setHouses([
+            {
+                id: 1,
+                name: 'Cozy Nairobi Studio',
+                location: 'Nairobi',
+                price: 3500,
+                imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80',
+                beds: 1,
+                baths: 1,
+                description: 'A comfortable studio in the heart of Nairobi.'
+            },
+            {
+                id: 2,
+                name: 'Beachside Mombasa Villa',
+                location: 'Mombasa',
+                price: 8500,
+                imageUrl: 'https://images.unsplash.com/photo-1505691723518-36a6b7737cc6?w=1200&q=80',
+                beds: 3,
+                baths: 2,
+                description: 'Spacious villa with sea views.'
+            },
+            {
+                id: 3,
+                name: 'Lakeview Kisumu Apartment',
+                location: 'Kisumu',
+                price: 4200,
+                imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80',
+                beds: 2,
+                baths: 1,
+                description: 'Modern apartment overlooking the lake.'
+            }
+        ]);
     }, []);
 
     const handleSelectHouse = (house) => {
