@@ -1,51 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
 
-const HouseList = () => {
-    const [houses, setHouses] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const fetchHouses = async () => {
-            try {
-                const response = await axios.get('/api/houses');
-                setHouses(response.data);
-                setLoading(false);
-            } catch (err) {
-                setError('Failed to fetch houses. Please try again later.');
-                setLoading(false);
-                console.error('Error fetching houses:', err);
-            }
-        };
-
-        fetchHouses();
-    }, []);
-
+const HouseList = ({ houses }) => {
     const encodeImageURL = (image) => {
         if (!image || typeof image !== 'string' || image.trim() === '') {
             return 'https://via.placeholder.com/300';
         }
 
-        // For static builds, serve images from the current domain
         if (!image.startsWith('http')) {
-            // Remove any leading slash and serve from root
             const cleanPath = image.replace(/^\//, '');
             return `/${cleanPath}`;
         }
         return image;
     };
 
-    if (loading) {
-        return <div className="text-center p-8">Loading houses...</div>;
-    }
-
-    if (error) {
-        return <div className="text-center p-8 text-red-500">{error}</div>;
-    }
-
-    if (houses.length === 0) {
-        return <div className="text-center p-8">No houses available at the moment.</div>;
+    if (!houses || houses.length === 0) {
+        return <div className="text-center p-8">No houses match your search.</div>;
     }
 
     return (

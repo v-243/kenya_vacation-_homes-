@@ -3,6 +3,7 @@ import AdminBookings from './Bookings';
 import AddHousePage from './AddHousePage';
 import MyHouses from './MyHouses';
 import AdminStats from './AdminStats';
+import AdvertisementVideos from './AdvertisementVideos';
 
 const AdminDashboard = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('bookings');
@@ -95,7 +96,7 @@ const AdminDashboard = ({ onLogout }) => {
           />
         )}
         {activeTab === 'stats' && <AdminStats />}
-        {activeTab === 'advertisement-videos' && <AdvertisementVideos />}
+        {activeTab === 'advertisement-videos' && <src/admin/AdvertisementVideos />}
       </div>
     </div>
   );
