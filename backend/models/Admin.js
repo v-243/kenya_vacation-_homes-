@@ -15,7 +15,7 @@ class Admin {
   }
 
   static async findOne(query) {
-    const connection = getConnection();
+    const connection = await getConnection();
     let sql = 'SELECT * FROM admins WHERE ';
     const values = [];
     const conditions = [];
@@ -46,7 +46,7 @@ class Admin {
   }
 
   async save() {
-    const connection = getConnection();
+    const connection = await getConnection();
     const sql = 'INSERT INTO admins (full_name, id_number, location, email, phone_number, password, is_approved, approved_by, approval_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
     const values = [
       this.full_name,

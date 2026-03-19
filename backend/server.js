@@ -1,21 +1,15 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const { connectDB } = require('./db');
-const houseRoutes = require('./houseRoutes');
 const apiRoutes = require('./routes/api');
 
 dotenv.config();
-
-connectDB();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Note: /api/houses and /api routes are now consolidated in apiRoutes
-// houseRoutes is deprecated and should not be used
 app.use('/api', apiRoutes);
 
 const PORT = process.env.PORT || 5000;
@@ -32,7 +26,19 @@ if (require.main === module) {
 
 // Define a route for the root path
 app.get('/', (req, res) => {
-  res.send('Welcome to the House Kenya App Backend!');
+  res.status(200).json({
+    ok: true,
+    service: 'house-kenya-backend',
+    message: 'Backend is running',
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    ok: true,
+    service: 'house-kenya-backend',
+    env: process.env.NODE_ENV || 'development',
+  });
 });
 
 process.on('uncaughtException', (err) => {

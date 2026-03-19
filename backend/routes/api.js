@@ -12,16 +12,28 @@ const { updateHouse, deleteHouse } = require('../houseController');
 // GET /api/houses - Fetch all houses, with optional search and pagination
 router.get('/houses', async (req, res) => {
   const { search, page = 1, limit = 10 } = req.query;
-  const offset = (page - 1) * limit;
+  const parsedPage = Number.parseInt(page, 10) || 1;
+  const parsedLimit = Number.parseInt(limit, 10) || 10;
+  const offset = (parsedPage - 1) * parsedLimit;
 
   try {
     let query = 'SELECT * FROM houses';
     const params = [];
+
     if (search) {
-      query += ' WHERE location ILIKE $1 OR name ILIKE $2';
+      query += ' WHERE location LIKE ? OR name LIKE ?';
       params.push(`%${search}%`, `%${search}%`);
     }
-    query += ' LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
+    query += ' LIMIT ? OFFSET ?';
+    params.push(parsedLimit, offset);
+
+    const [houses] = await db.query(query, params);
+    res.status(200).json(houses);
+  } catch (err) {
+    console.error('Error fetching houses:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch houses.' });
+  }
+});
 
 // POST /api/houses - Create a new house (admin only)
 router.post('/houses', adminAuth, (req, res, next) => {

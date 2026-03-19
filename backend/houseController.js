@@ -5,7 +5,7 @@ const db = require('./db');
 // @access  Public
 const getHouses = async (req, res) => {
   try {
-    const connection = db.getConnection();
+    const connection = await db.getConnection();
     const [rows] = await connection.query('SELECT id, name, location, price, beds, baths, imageUrl, description FROM houses');
     res.json(rows);
   } catch (error) {
@@ -55,7 +55,7 @@ const addHouse = async (req, res) => {
   }
 
   try {
-    const connection = db.getConnection();
+    const connection = await db.getConnection();
     const [result] = await connection.query(
       'INSERT INTO houses (name, location, price, beds, baths, imageUrl, description) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [name, location, price, beds, baths, imageUrl, description]
@@ -116,7 +116,7 @@ const updateHouse = async (req, res) => {
   }
 
   try {
-    const connection = db.getConnection();
+    const connection = await db.getConnection();
     // Build dynamic update query
     const updates = [];
     const params = [];
@@ -152,7 +152,7 @@ const deleteHouse = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const connection = db.getConnection();
+    const connection = await db.getConnection();
     console.log(`Attempting to delete house with ID: ${id}`);
 
     // First, try to delete all bookings associated with this house
