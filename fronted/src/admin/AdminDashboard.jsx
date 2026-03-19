@@ -96,7 +96,7 @@ const AdminDashboard = ({ onLogout }) => {
           />
         )}
         {activeTab === 'stats' && <AdminStats />}
-        {activeTab === 'advertisement-videos' && <src/admin/AdvertisementVideos />}
+        {activeTab === 'advertisement-videos' && <AdvertisementVideos />}
       </div>
     </div>
   );
