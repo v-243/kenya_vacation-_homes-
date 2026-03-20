@@ -772,6 +772,7 @@ router.delete('/videos/:filename', adminAuth, async (req, res) => {
   } catch (err) {
     console.error('Error deleting video:', err);
     res.status(500).json({ error: 'Failed to delete video' });
+  }
 });
 
 // ===== ANALYTICS ENDPOINTS =====
