@@ -491,7 +491,7 @@ router.post('/admin/login', async (req, res) => {
     const jwt = require('jsonwebtoken');
     const token = jwt.sign(
       { adminId: admin.id, email: admin.email },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 

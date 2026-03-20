@@ -1,5 +1,13 @@
 const jwt = require('jsonwebtoken');
 
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('Missing required environment variable: JWT_SECRET');
+  }
+
+  return process.env.JWT_SECRET;
+};
+
 const adminAuth = (req, res, next) => {
   // Try to get token from Authorization header or x-admin-key header
   const token = req.header('Authorization')?.replace('Bearer ', '') || req.header('x-admin-key');
@@ -9,7 +17,7 @@ const adminAuth = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, getJwtSecret());
     req.adminId = decoded.adminId;
     next();
   } catch (err) {

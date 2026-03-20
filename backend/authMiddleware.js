@@ -1,5 +1,13 @@
 const jwt = require('jsonwebtoken');
 
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('Missing required environment variable: JWT_SECRET');
+  }
+
+  return process.env.JWT_SECRET;
+};
+
 // Middleware to protect routes
 const protect = (req, res, next) => {
   let token;
@@ -13,7 +21,7 @@ const protect = (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
 
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
+      const decoded = jwt.verify(token, getJwtSecret());
 
       // Attach user info to request (optional, adjust according to your token payload)
       req.user = decoded;
