@@ -4,7 +4,6 @@ import axios from 'axios';
 import Layout from './Display';
 import AdminDashboard from '../admin/AdminDashboard';
 import AdminAuth from '../admin/AdminAuth';
-import BookingDetailsPage from '../pages/BookingDetailsPage';
 import HouseList from '../houselist';
 import HeroSection from './HeroSection';
 import KenyaMap from './KenyaMap';
@@ -134,4 +133,3 @@ const App = () => (
 );
 
 export default App;
-
